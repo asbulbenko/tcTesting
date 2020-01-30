@@ -1,0 +1,69 @@
+import org.junit.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
+import java.sql.*;
+
+import static org.junit.Assert.assertEquals;
+
+public class MyMysqlTestContainer {
+    private static final Logger logger = LoggerFactory.getLogger(MyMysqlTestContainer.class);
+
+    public static MySQLContainer mySQLContainer;
+
+    @BeforeClass
+    public static void startUp() {
+        mySQLContainer = (MySQLContainer) new MySQLContainer("mysql:8.0.18")
+                .withInitScript("initTestDB.sql")
+                .withLogConsumer(new Slf4jLogConsumer(logger));
+        logger.info("<< Init DB >>");
+
+        logger.info("start MYSQL container");
+        mySQLContainer.start();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        logger.info("Close MYSQL connections");
+        mySQLContainer.close();
+    }
+
+    private Statement performQuery()  throws SQLException {
+        Connection connection = DriverManager.getConnection(mySQLContainer.getJdbcUrl(),mySQLContainer.getUsername(),mySQLContainer.getPassword());
+        logger.info(">>> SQL Connection to database established!");
+        return connection.createStatement();
+    }
+
+    @Test
+    public void checkVersion() throws SQLException {
+        ResultSet resultSet = performQuery().executeQuery("SELECT VERSION()");
+        resultSet.next();
+        assertEquals("Mysql container driver version 8.0.18 ", "8.0.18", resultSet.getString(1));
+    }
+
+    @Test
+    public void checkCount() throws SQLException {
+        ResultSet resultSet = performQuery().executeQuery("SELECT 1");
+        if(resultSet.next()) {
+            System.out.println(resultSet.getString(1));
+        }
+        assertEquals("A basic SELECT query succeed", 1 , resultSet.getInt(1));
+    }
+
+    @Test
+    public void checkStudentsCount() throws SQLException {
+        ResultSet resultSet = performQuery().executeQuery("select count(1) from test.students");
+        resultSet.next();
+        assertEquals("Students should be 13 ", 13 , resultSet.getInt(1));
+    }
+
+    @Test
+    public void checkStudentExist() throws SQLException {
+        ResultSet resultSet = performQuery().executeQuery("select fio from test.students where id = 1");
+        resultSet.next();
+        assertEquals("First student from list", "Bryant Smith", resultSet.getString(1));
+    }
+
+
+}
