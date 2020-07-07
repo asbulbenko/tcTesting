@@ -65,5 +65,16 @@ public class MyMysqlTestContainer {
         assertEquals("First student from list", "Bryant Smith", resultSet.getString(1));
     }
 
-
+    @Test
+    public void  check() throws SQLException {
+        String chiefName = "Korolev S.I";
+        ResultSet resultSet = performQuery().executeQuery("select department_chief from test.department where department_name ='Aeronautics'");
+        resultSet.next();
+        assertEquals("Department chief is not Korolev S.I.", chiefName,resultSet.getString(1));
+        System.out.println(">> Start updating ");
+        performQuery().executeUpdate("update test.department set department_chief = 'Korolev S.S.'");
+        resultSet = performQuery().executeQuery("select department_chief from test.department where department_name ='Aeronautics'");
+        resultSet.next();
+        assertEquals("Department chief is not Korolev S.S.", "Korolev S.S.",resultSet.getString(1));
+    }
 }
