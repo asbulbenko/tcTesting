@@ -3,35 +3,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.utility.DockerImageName;
+
 import java.sql.*;
 
 import static org.junit.Assert.assertEquals;
 
 public class MyMysqlTestContainer {
-    private static final Logger logger = LoggerFactory.getLogger(MyMysqlTestContainer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MyMysqlTestContainer.class);
 
     public static MySQLContainer mySQLContainer;
 
     @BeforeClass
     public static void startUp() {
-        mySQLContainer = (MySQLContainer) new MySQLContainer("mysql:8.0.18")
+        mySQLContainer = (MySQLContainer) new MySQLContainer(DockerImageName.parse("mysql:8.0.25"))
                 .withInitScript("initTestDB.sql")
-                .withLogConsumer(new Slf4jLogConsumer(logger));
-        logger.info("<< Init DB >>");
+                .withLogConsumer(new Slf4jLogConsumer(LOGGER));
+        LOGGER.info("<< Init DB >>");
 
-        logger.info("start MYSQL container");
+        LOGGER.info("start MYSQL container");
         mySQLContainer.start();
     }
 
     @AfterClass
     public static void tearDown() {
-        logger.info("Close MYSQL connections");
+        LOGGER.info("Close MYSQL connections");
         mySQLContainer.close();
     }
 
     private Statement performQuery()  throws SQLException {
         Connection connection = DriverManager.getConnection(mySQLContainer.getJdbcUrl(),mySQLContainer.getUsername(),mySQLContainer.getPassword());
-        logger.info(">>> SQL Connection to database established!");
+        LOGGER.info(">>> SQL Connection to database established!");
         return connection.createStatement();
     }
 
@@ -39,7 +41,7 @@ public class MyMysqlTestContainer {
     public void checkVersion() throws SQLException {
         ResultSet resultSet = performQuery().executeQuery("SELECT VERSION()");
         resultSet.next();
-        assertEquals("Mysql container driver version 8.0.18 ", "8.0.18", resultSet.getString(1));
+        assertEquals("Mysql container driver version 8.0.25 ", "8.0.25", resultSet.getString(1));
     }
 
     @Test
