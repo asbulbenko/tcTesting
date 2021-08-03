@@ -12,11 +12,11 @@ import static org.junit.Assert.assertEquals;
 public class MyMysqlTestContainer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MyMysqlTestContainer.class);
 
-    public static MySQLContainer mySQLContainer;
+    public static MySQLContainer<?> mySQLContainer;
 
     @BeforeClass
     public static void startUp() {
-        mySQLContainer = (MySQLContainer) new MySQLContainer(DockerImageName.parse("mysql:8.0.25"))
+        mySQLContainer = new MySQLContainer<>(DockerImageName.parse("mysql:8.0.25"))
                 .withInitScript("initTestDB.sql")
                 .withLogConsumer(new Slf4jLogConsumer(LOGGER));
         LOGGER.info("<< Init DB >>");
